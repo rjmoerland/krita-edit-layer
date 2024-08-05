@@ -20,3 +20,7 @@ First run the menu action Tools/Scripts/Configure Edit Layer Externally. Browse 
 - Close the external editor
 
 Krita will load the external layer, and incorporate it in the document as a new layer above the source.
+ 
+## Requirements
+
+Tested with Krita 2.5.3 on Windows 10, and images in the RGB format with 8 and 16 bit integers per pixel.
