@@ -4,9 +4,9 @@ import os
 import subprocess
 from tempfile import TemporaryDirectory
 
-from krita import Krita, Extension, InfoObject, QRect
+from krita import Extension, InfoObject, Krita, QRect, qDebug
 from PyQt5.Qt import QByteArray, QImage
-from PyQt5.QtWidgets import QMessageBox, QInputDialog, QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 EXE_EXTENSION_ID = "pykrita_edit_layer_externally"
 DEFINE_EXTENSION_ID = "pykrita_config_edit_layer_externally"
@@ -23,25 +23,36 @@ class EditLayerExternally(Extension):
         super().__init__(parent)
 
     def _read_config(self, slot: int = 1):
+        qDebug(f"_read_config: slot = {slot}")
         self.command = Krita.instance().readSetting("Edit Layer Externally", f"command_{slot}", "")
         self.parameters = Krita.instance().readSetting(
             "Edit Layer Externally", f"parameters_{slot}", ""
         )
+        qDebug(f"_read_config: command = {self.command}")
+        qDebug(f"_read_config: parameters = {self.parameters}")
 
     def _write_config(self, command: str, parameters: str, slot: int = 1):
+        qDebug(f"_write_config: command = {command}")
+        qDebug(f"_write_config: parameters = {parameters}")
+        qDebug(f"_write_config: slot = {slot}")
+
         Krita.instance().writeSetting("Edit Layer Externally", f"command_{slot}", command)
         Krita.instance().writeSetting("Edit Layer Externally", f"parameters_{slot}", parameters)
 
     def setup(self):
+        qDebug("setup called")
         self._read_config()
 
     def verify_command(self, command_string: str):
         if not os.path.isfile(command_string):
+            qDebug(f"verify_command returned False")
             return False
         return True
 
     def define_command(self):
         command = QFileDialog.getOpenFileName(None, "Browse to executable file")[0]
+        qDebug(f"define_command: command = {command}")
+
         if command is None or command == "":
             return
         if not self.verify_command(command):
@@ -58,6 +69,8 @@ class EditLayerExternally(Extension):
             "Enter switches / run time options to add to the command line:",
         )
         if accept:
+            qDebug(f"define_command: storing config")
+
             self._write_config(command, parameters, 1)
             self._read_config()
 
@@ -91,6 +104,7 @@ class EditLayerExternally(Extension):
             return
 
         width, height = doc.width(), doc.height()
+        qDebug(f"action_trigged: reported document width and height: {width} x {height}")
 
         # Define a temporary file path
         with TemporaryDirectory(prefix="krita_layer_") as tmpdir:
@@ -99,22 +113,29 @@ class EditLayerExternally(Extension):
             # Not sure this is necessary
             if temp_filename.find(" ") != -1:
                 temp_filename = f'"{temp_filename}"'
+            qDebug(f"action_triggered: temp_filename = {temp_filename}")
 
             # Save the layer as a TIFF image
+            qDebug(f"Saving layer with dimensions (w x h): {width} x {height}")
             node.save(temp_filename, 72.0, 72.0, InfoObject(), QRect(0, 0, width, height))
             # Workaround: node.save() should return True or False, but seems to
             # always return False? Therefore, check that the file exists before
             # continuing, as the user may have pressed the cancel button in the
             # export dialog.
             if not os.path.isfile(temp_filename):
+                qDebug(f"action_triggered: temporary file not detected after node.save()")
                 return
             clone = node.duplicate()
             clone.setName(f"Edited - {node.name()}")
             parent = node.parentNode()
             parent.addChildNode(clone, node)
+            qDebug(f"action_triggered: duplicated source node")
 
             # Open the image in an external editor (e.g., GIMP)
             try:
+                qDebug(
+                    f"action_triggered: running {self.command} {temp_filename} {self.parameters}"
+                )
                 subprocess.run([self.command, temp_filename, self.parameters])
             except FileNotFoundError:
                 self.msgBox.setText("External editor not found.")
@@ -123,8 +144,22 @@ class EditLayerExternally(Extension):
 
             # Reload the image after editing
             if os.path.exists(temp_filename):
+                qDebug("action_triggered: retrieving modified file")
                 image = QImage()
-                image.load(temp_filename)
+                success = image.load(temp_filename)
+                if not success:
+                    self.msgBox.setText(f"Edited layer file could not be loaded successfully.")
+                    self.msgBox.exec()
+                    return
+                rect = image.rect()
+                qDebug(f"Retrieved image has dimensions (w x h): {rect.width()} x {rect.height()}")
+
+                if (rect.width() != width) or (rect.height() != height):
+                    self.msgBox.setText(
+                        f"The dimensions of the layer file mismatch with the document."
+                    )
+                    self.msgBox.exec()
+                    return
                 image = image.rgbSwapped()
                 pixel_data = image.bits()
                 pixel_data.setsize(image.byteCount())
@@ -132,6 +167,7 @@ class EditLayerExternally(Extension):
                 # Update the Krita layer with the new image
                 clone.setPixelData(QByteArray(pixel_data.asstring()), 0, 0, width, height)
                 doc.refreshProjection()
+                qDebug("action_triggered: done")
             else:
                 self.msgBox.setText(f"Could not find edited layer file '{temp_filename}'.")
                 self.msgBox.exec()
