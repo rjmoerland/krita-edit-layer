@@ -5,6 +5,10 @@ As an Adobe refugee, I've moved to Krita for my photo editing. The only thing I 
 
 After installing the plugin,you can find the script in the `Tools/Scripts/Edit Layer Externally` menu. On first use, the plug-in should ask you if you want to configure it. In case it doesn’t, or if you would like to reconfigure the external editor, use the `Tools/Scripts/Configure Edit Layer Externally` menu item. 
 
+## Installing 
+
+Press the button labeled "Code" on this page and download the ZIP file. Then continue the installation by following the instructions located [here](https://docs.krita.org/en/user_manual/python_scripting/install_custom_python_plugin.html).
+
 ## Configuring
 
 First run the menu action Tools/Scripts/Configure Edit Layer Externally. Browse to an executable file with the file dialog that opens. If the executable needs any command line parameters or switches, you can add them in the dialog that opens after selecting a file. You can leave the box empty if no switches are required. Close the command line switch dialog with OK and the plugin is configured. You can reconfigure at any time by choosing Tools/Scripts/Configure Edit Layer Externally again.
