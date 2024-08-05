@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=edit_layer_externally
+X-Python-2-Compatible=false
+X-Krita-Manual=Manual.html
+Name=Edit Layer externally
+Comment=Edit a layer in an external program

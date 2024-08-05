@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--BBD's Krita Script Starter, Feb 2018 -->
+<head><title>Edit Layer externally</title>
+</head>
+<body>
+<h3>Edit Layer externally</h3>
+Edit the currently selected paint layer in an external application.
+
+<h3>Setting up</h3>
+First run the menu action "Tools/Scripts/Configure Edit Layer Externally". Browse to an executable file with the file dialog that opens. If the executable needs any command line parameters or switches, you can add them in the dialog that opens after selecting a file. You can leave the box empty if no switches are required. Close the command line switch dialog with OK and the plugin is configured. You can reconfigure at any time by choosing "Tools/Scripts/Configure Edit Layer Externally" again.
+
+<h3>Usage</h3>
+<ol>
+<li>Select a paint layer</li>
+<li>Run this script</li>
+<li>The external editor will open</li>
+<li>Make the desired edits</li>
+<li>Save over the temporary .tiff file</li>
+<li>Close the external application</li>
+</ol>
+Krita will load the edited layer back into the current document as a copy of the original layer.
+
+</body>
+</html>
