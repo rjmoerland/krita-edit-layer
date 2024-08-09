@@ -5,7 +5,6 @@ import subprocess
 from tempfile import TemporaryDirectory
 
 from krita import Extension, InfoObject, Krita, QRect, qDebug
-from PyQt5.Qt import QByteArray, QImage
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 from .__about__ import __version__
