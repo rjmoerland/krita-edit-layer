@@ -8,6 +8,8 @@ from krita import Extension, InfoObject, Krita, QRect, qDebug
 from PyQt5.Qt import QByteArray, QImage
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
+from .__about__ import __version__
+
 EXE_EXTENSION_ID = "pykrita_edit_layer_externally"
 DEFINE_EXTENSION_ID = "pykrita_config_edit_layer_externally"
 EXE_MENU_ENTRY = "Edit Layer Externally"
@@ -40,7 +42,7 @@ class EditLayerExternally(Extension):
         Krita.instance().writeSetting("Edit Layer Externally", f"parameters_{slot}", parameters)
 
     def setup(self):
-        qDebug("setup called")
+        qDebug(f"Edit Layer Externally setup reporting version {__version__}")
         self._read_config()
 
     def verify_command(self, command_string: str):
@@ -83,6 +85,7 @@ class EditLayerExternally(Extension):
         action.triggered.connect(self.define_command)
 
     def action_triggered(self):
+        qDebug(f"Running Edit Layer Externally version {__version__}")
         # Get the current document and the active node (layer)
         if self.command == "":  # No command set up
             self.msgBox.setText("No command defined yet")
@@ -129,7 +132,7 @@ class EditLayerExternally(Extension):
             # continuing, as the user may have pressed the cancel button in the
             # export dialog.
             if not os.path.isfile(temp_filename):
-                qDebug(f"action_triggered: temporary file not detected after node.save()")
+                qDebug(f"action_triggered: action cancelled, temporary file not detected after node.save()")
                 return
             clone = node.duplicate()
             clone.setName(f"Edited - {node.name()}")
