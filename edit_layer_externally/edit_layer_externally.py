@@ -73,6 +73,8 @@ class EditLayerExternally(Extension):
 
             self._write_config(command, parameters, 1)
             self._read_config()
+            self.msgBox.setText("Plug-in configured successfully")
+            self.msgBox.exec()
 
     def createActions(self, window):
         action = window.createAction(EXE_EXTENSION_ID, EXE_MENU_ENTRY, "tools/scripts")
@@ -104,7 +106,11 @@ class EditLayerExternally(Extension):
             return
 
         width, height = doc.width(), doc.height()
-        qDebug(f"action_trigged: reported document width and height: {width} x {height}")
+        colorDepth = node.colorDepth()
+        colorModel = node.colorModel()
+        qDebug(
+            f"action_trigged: reported document width, height, color depth and color model: {width} x {height}: {colorDepth} {colorModel}"
+        )
 
         # Define a temporary file path
         with TemporaryDirectory(prefix="krita_layer_") as tmpdir:
@@ -160,7 +166,12 @@ class EditLayerExternally(Extension):
                     )
                     self.msgBox.exec()
                     return
-                image = image.rgbSwapped()
+
+                # Based on limited testing, U8 images do not need to have their bytes swapped, but U16 do need it.
+                # No idea about floating point formats however.
+                if colorDepth == "U16" and colorModel == "RGBA":
+                    qDebug("U16 color format, swapping RGB data to BGR")
+                    image = image.rgbSwapped()
                 pixel_data = image.bits()
                 pixel_data.setsize(image.byteCount())
 
