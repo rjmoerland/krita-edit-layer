@@ -132,7 +132,9 @@ class EditLayerExternally(Extension):
             # continuing, as the user may have pressed the cancel button in the
             # export dialog.
             if not os.path.isfile(temp_filename):
-                qDebug(f"action_triggered: action cancelled, temporary file not detected after node.save()")
+                qDebug(
+                    f"action_triggered: action cancelled, temporary file not detected after node.save()"
+                )
                 return
             clone = node.duplicate()
             clone.setName(f"Edited - {node.name()}")
@@ -140,7 +142,7 @@ class EditLayerExternally(Extension):
             parent.addChildNode(clone, node)
             qDebug(f"action_triggered: duplicated source node")
 
-            # Open the image in an external editor (e.g., GIMP)
+            # Open the image in an external editor
             try:
                 qDebug(
                     f"action_triggered: running {self.command} {temp_filename} {self.parameters}"
@@ -154,32 +156,10 @@ class EditLayerExternally(Extension):
             # Reload the image after editing
             if os.path.exists(temp_filename):
                 qDebug("action_triggered: retrieving modified file")
-                image = QImage()
-                success = image.load(temp_filename)
-                if not success:
-                    self.msgBox.setText(f"Edited layer file could not be loaded successfully.")
-                    self.msgBox.exec()
-                    return
-                rect = image.rect()
-                qDebug(f"Retrieved image has dimensions (w x h): {rect.width()} x {rect.height()}")
-
-                if (rect.width() != width) or (rect.height() != height):
-                    self.msgBox.setText(
-                        f"The dimensions of the layer file mismatch with the document."
-                    )
-                    self.msgBox.exec()
-                    return
-
-                # Based on limited testing, U8 images do not need to have their bytes swapped, but U16 do need it.
-                # No idea about floating point formats however.
-                if colorDepth == "U16" and colorModel == "RGBA":
-                    qDebug("U16 color format, swapping RGB data to BGR")
-                    image = image.rgbSwapped()
-                pixel_data = image.bits()
-                pixel_data.setsize(image.byteCount())
-
-                # Update the Krita layer with the new image
-                clone.setPixelData(QByteArray(pixel_data.asstring()), 0, 0, width, height)
+                filelayer = doc.createFileLayer(f"Edited - {node.name()}", temp_filename, "None")
+                qDebug("action_triggered: setting pixel data of clone layer")
+                clone.setPixelData(filelayer.pixelData(0, 0, width, height), 0, 0, width, height)
+                del filelayer
                 doc.refreshProjection()
                 qDebug("action_triggered: done")
             else:
