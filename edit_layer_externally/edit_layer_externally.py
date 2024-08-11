@@ -46,7 +46,7 @@ class EditLayerExternally(Extension):
 
     def verify_command(self, command_string: str):
         if not os.path.isfile(command_string):
-            qDebug(f"verify_command returned False")
+            qDebug("verify_command returned False")
             return False
         return True
 
@@ -71,7 +71,7 @@ class EditLayerExternally(Extension):
             "Enter switches / run time options to add to the command line:",
         )
         if accept:
-            qDebug(f"define_command: storing config")
+            qDebug("define_command: storing config")
 
             self._write_config(command, parameters, 1)
             self._read_config()
@@ -133,14 +133,14 @@ class EditLayerExternally(Extension):
             # export dialog.
             if not os.path.isfile(temp_filename):
                 qDebug(
-                    f"action_triggered: action cancelled, temporary file not detected after node.save()"
+                    "action_triggered: action cancelled, temporary file not detected after node.save()"
                 )
                 return
             clone = node.duplicate()
             clone.setName(f"Edited - {node.name()}")
             parent = node.parentNode()
             parent.addChildNode(clone, node)
-            qDebug(f"action_triggered: duplicated source node")
+            qDebug("action_triggered: duplicated source node")
 
             # Open the image in an external editor (e.g., GIMP)
             try:
