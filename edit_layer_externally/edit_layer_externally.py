@@ -115,16 +115,17 @@ class EditLayerExternally(Extension):
             f"action_trigged: reported document width, height, color depth and color model: {width} x {height}: {colorDepth} {colorModel}"
         )
 
+        ext = "tiff" if colorDepth in ("F16", "F32") else "png"
         # Define a temporary file path
         with TemporaryDirectory(prefix="krita_layer_") as tmpdir:
-            temp_filename = os.path.join(tmpdir, "layer.tiff")
+            temp_filename = os.path.join(tmpdir, f"layer.{ext}")
 
             # Not sure this is necessary
             if temp_filename.find(" ") != -1:
                 temp_filename = f'"{temp_filename}"'
             qDebug(f"action_triggered: temp_filename = {temp_filename}")
 
-            # Save the layer as a TIFF image
+            # Save the layer as an image
             qDebug(f"Saving layer with dimensions (w x h): {width} x {height}")
             node.save(temp_filename, 72.0, 72.0, InfoObject(), QRect(0, 0, width, height))
             # Workaround: node.save() should return True or False, but seems to
