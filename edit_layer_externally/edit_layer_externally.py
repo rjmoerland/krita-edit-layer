@@ -21,7 +21,6 @@ class EditLayerExternally(Extension):
     def __init__(self, parent):
         # Always initialise the superclass.
         # This is necessary to create the underlying C++ object
-        self.msgBox = QMessageBox(None)
         super().__init__(parent)
 
     def _read_config(self, slot: int = 1):
@@ -58,16 +57,17 @@ class EditLayerExternally(Extension):
         if command is None or command == "":
             return
         if not self.verify_command(command):
-            self.msgBox.setText(
+            QMessageBox.critical(
+                None,
+                "Configure failed:",
                 f"Could not verify the validity of the command line given: {command}. "
-                "Check if it is a valid path to an executable on your system."
+                "Check if it is a valid path to an executable on your system.",
             )
-            self.msgBox.exec()
             return
 
         parameters, accept = QInputDialog().getText(
             None,
-            "Edit Layer Externally",
+            EXE_MENU_ENTRY,
             "Enter switches / run time options to add to the command line:",
         )
         if accept:
@@ -75,8 +75,8 @@ class EditLayerExternally(Extension):
 
             self._write_config(command, parameters, 1)
             self._read_config()
-            self.msgBox.setText("Plug-in configured successfully")
-            self.msgBox.exec()
+
+            QMessageBox.information(None, EXE_MENU_ENTRY, "Plug-in configured successfully")
 
     def createActions(self, window):
         action = window.createAction(EXE_EXTENSION_ID, EXE_MENU_ENTRY, "tools/scripts")
@@ -88,24 +88,23 @@ class EditLayerExternally(Extension):
         qDebug(f"Running Edit Layer Externally version {__version__}")
         # Get the current document and the active node (layer)
         if self.command == "":  # No command set up
-            self.msgBox.setText("No command defined yet")
-            self.msgBox.setInformativeText("Would you like to do that now?")
-            self.msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            self.msgBox.setDefaultButton(QMessageBox.Yes)
-            if self.msgBox.exec() == QMessageBox.Yes:
+            msgBox = QMessageBox
+            msgBox.setText("No command defined yet")
+            msgBox.setInformativeText("Would you like to do that now?")
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msgBox.setDefaultButton(QMessageBox.Yes)
+            if msgBox.exec() == QMessageBox.Yes:
                 self.define_command()
             return
 
         doc = Krita.instance().activeDocument()
         if not doc:
-            self.msgBox.setText("No active document found")
-            self.msgBox.exec()
+            QMessageBox.information(None, EXE_MENU_ENTRY, "No active document found")
             return
 
         node = doc.activeNode()
         if not node or not node.type() == "paintlayer":
-            self.msgBox.setText("Please select a paint layer.")
-            self.msgBox.exec()
+            QMessageBox.information(None, EXE_MENU_ENTRY, "Please select a paint layer.")
             return
 
         width, height = doc.width(), doc.height()
@@ -133,7 +132,9 @@ class EditLayerExternally(Extension):
             # continuing, as the user may have pressed the cancel button in the
             # export dialog.
             if not os.path.isfile(temp_filename):
-                qDebug(f"action_triggered: action cancelled, temporary file not detected after node.save()")
+                qDebug(
+                    f"action_triggered: action cancelled, temporary file not detected after node.save()"
+                )
                 return
             clone = node.duplicate()
             clone.setName(f"Edited - {node.name()}")
@@ -148,8 +149,7 @@ class EditLayerExternally(Extension):
                 )
                 subprocess.run([self.command, temp_filename, self.parameters])
             except FileNotFoundError:
-                self.msgBox.setText("External editor not found.")
-                self.msgBox.exec()
+                QMessageBox.information(None, EXE_MENU_ENTRY, "External editor not found.")
                 return
 
             # Reload the image after editing
@@ -158,17 +158,20 @@ class EditLayerExternally(Extension):
                 image = QImage()
                 success = image.load(temp_filename)
                 if not success:
-                    self.msgBox.setText(f"Edited layer file could not be loaded successfully.")
-                    self.msgBox.exec()
+                    QMessageBox.critical(
+                        None, EXE_MENU_ENTRY, "Edited layer file could not be loaded successfully."
+                    )
                     return
+
                 rect = image.rect()
                 qDebug(f"Retrieved image has dimensions (w x h): {rect.width()} x {rect.height()}")
-
+                qDebug(f"Image format: {image.format()}.")
                 if (rect.width() != width) or (rect.height() != height):
-                    self.msgBox.setText(
-                        f"The dimensions of the layer file mismatch with the document."
+                    QMessageBox.critical(
+                        None,
+                        EXE_MENU_ENTRY,
+                        "The dimensions of the layer file mismatch with the document.",
                     )
-                    self.msgBox.exec()
                     return
 
                 # Based on limited testing, U8 images do not need to have their bytes swapped, but U16 do need it.
@@ -184,6 +187,7 @@ class EditLayerExternally(Extension):
                 doc.refreshProjection()
                 qDebug("action_triggered: done")
             else:
-                self.msgBox.setText(f"Could not find edited layer file '{temp_filename}'.")
-                self.msgBox.exec()
+                QMessageBox.critical(
+                    None, EXE_MENU_ENTRY, f"Could not find edited layer file '{temp_filename}'."
+                )
                 return
