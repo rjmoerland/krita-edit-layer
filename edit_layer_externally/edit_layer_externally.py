@@ -88,7 +88,7 @@ class EditLayerExternally(Extension):
         qDebug(f"Running Edit Layer Externally version {__version__}")
         # Get the current document and the active node (layer)
         if self.command == "":  # No command set up
-            msgBox = QMessageBox
+            msgBox = QMessageBox()
             msgBox.setText("No command defined yet")
             msgBox.setInformativeText("Would you like to do that now?")
             msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
