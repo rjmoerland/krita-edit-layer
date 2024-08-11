@@ -38,4 +38,4 @@ Krita will load the external layer, and incorporate it in the document as a new 
  
 ## Requirements
 
-Tested with Krita 2.5.3 on Windows 10, and images in the RGB format with 8 and 16 bit integers per pixel. Floating point formats and other color models are explicitly untested!
+Tested with Krita 5.2.3 on Windows 10, and images in the RGB format with 8 and 16 bit integers per pixel. Floating point formats and other color models are explicitly untested!
