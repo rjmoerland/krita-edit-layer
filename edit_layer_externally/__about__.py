@@ -1,6 +1,5 @@
 __title__ = "edit_layer_externally"
-__version__ = "0.1.3"
+__version__ = "0.2.0"
 __summary__ = "Krita plugin to run external application on a layer"
 __url__ = "https://github.com/rjmoerland/krita-edit-layer"
-
 __author__ = "R. J. Moerland"

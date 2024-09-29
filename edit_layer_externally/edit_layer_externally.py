@@ -103,15 +103,20 @@ class EditLayerExternally(Extension):
             return
 
         node = doc.activeNode()
-        if not node or not node.type() == "paintlayer":
-            QMessageBox.information(None, EXE_MENU_ENTRY, "Please select a paint layer.")
+        if not node or node.type() not in ["paintlayer", "filelayer", "clonelayer", "grouplayer"]:
+            QMessageBox.information(
+                None,
+                EXE_MENU_ENTRY,
+                "Please select a Paint layer, File layer, Clone layer or Group layer.",
+            )
             return
 
-        width, height = doc.width(), doc.height()
+        source_rect = node.bounds()
         colorDepth = node.colorDepth()
         colorModel = node.colorModel()
         qDebug(
-            f"action_trigged: reported document width, height, color depth and color model: {width} x {height}: {colorDepth} {colorModel}"
+            "action_trigged: reported document width, height, color depth and color model:"
+            f" {source_rect.width()} x {source_rect.height()}: {colorDepth} {colorModel}"
         )
 
         ext = "tiff" if colorDepth in ("F16", "F32") else "png"
@@ -119,14 +124,17 @@ class EditLayerExternally(Extension):
         with TemporaryDirectory(prefix="krita_layer_") as tmpdir:
             temp_filename = os.path.join(tmpdir, f"layer.{ext}")
 
-            # Not sure this is necessary
+            # Put the filename between quotes in case it contains a space. Not sure this is
+            # necessary
             if temp_filename.find(" ") != -1:
                 temp_filename = f'"{temp_filename}"'
             qDebug(f"action_triggered: temp_filename = {temp_filename}")
 
             # Save the layer as an image
-            qDebug(f"Saving layer with dimensions (w x h): {width} x {height}")
-            node.save(temp_filename, 72.0, 72.0, InfoObject(), QRect(0, 0, width, height))
+            qDebug(
+                f"Saving layer with dimensions (w x h): {source_rect.width()} x {source_rect.height()}"
+            )
+            node.save(temp_filename, 72.0, 72.0, InfoObject(), source_rect)
             # Workaround: node.save() should return True or False, but seems to
             # always return False? Therefore, check that the file exists before
             # continuing, as the user may have pressed the cancel button in the
@@ -136,11 +144,6 @@ class EditLayerExternally(Extension):
                     "action_triggered: action cancelled, temporary file not detected after node.save()"
                 )
                 return
-            clone = node.duplicate()
-            clone.setName(f"Edited - {node.name()}")
-            parent = node.parentNode()
-            parent.addChildNode(clone, node)
-            qDebug("action_triggered: duplicated source node")
 
             # Open the image in an external editor (e.g., GIMP)
             try:
@@ -155,35 +158,24 @@ class EditLayerExternally(Extension):
             # Reload the image after editing
             if os.path.exists(temp_filename):
                 qDebug("action_triggered: retrieving modified file")
-                image = QImage()
-                success = image.load(temp_filename)
-                if not success:
-                    QMessageBox.critical(
-                        None, EXE_MENU_ENTRY, "Edited layer file could not be loaded successfully."
-                    )
-                    return
+                file_node = doc.createFileLayer(
+                    f"File Layer - {node.name()}", temp_filename, "ToImageSize", "Lanczos3"
+                )
 
-                rect = image.rect()
-                qDebug(f"Retrieved image has dimensions (w x h): {rect.width()} x {rect.height()}")
-                qDebug(f"Image format: {image.format()}.")
-                if (rect.width() != width) or (rect.height() != height):
-                    QMessageBox.critical(
-                        None,
-                        EXE_MENU_ENTRY,
-                        "The dimensions of the layer file mismatch with the document.",
-                    )
-                    return
-
-                # Based on limited testing, U8 images do not need to have their bytes swapped, but U16 do need it.
-                # No idea about floating point formats however.
-                if colorDepth == "U16" and colorModel == "RGBA":
-                    qDebug("U16 color format, swapping RGB data to BGR")
-                    image = image.rgbSwapped()
-                pixel_data = image.bits()
-                pixel_data.setsize(image.byteCount())
+                file_rect = file_node.bounds()
+                qDebug(
+                    f"Retrieved image has dimensions (w x h): {file_rect.width()} x {file_rect.height()}"
+                )
+                pixel_data = file_node.projectionPixelData(
+                    file_rect.left(), file_rect.top(), file_rect.width(), file_rect.height()
+                )
 
                 # Update the Krita layer with the new image
-                clone.setPixelData(QByteArray(pixel_data.asstring()), 0, 0, width, height)
+                target = doc.createNode(f"Edited - {node.name()}", "paintlayer")
+                qDebug(f"action_triggered: created target node")
+                target.setPixelData(pixel_data, 0, 0, file_rect.width(), file_rect.height())
+                parent = node.parentNode()
+                parent.addChildNode(target, node)
                 doc.refreshProjection()
                 qDebug("action_triggered: done")
             else:
