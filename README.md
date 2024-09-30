@@ -1,6 +1,6 @@
 # Edit Layer Externally
 
-A Krita plug-in that runs an external application on a single paint layer.
+A Krita plug-in that runs an external application on a single paint/clone/group/file layer.
 
 As an Adobe refugee, I've moved to Krita for my photo editing. The only thing I missed was the option to run Photoshop plug-ins on a Krita paint layer. Often, they can be used as stand-alone programs, but I quickly got tired of exporting a layer from Krita, starting the plug-in, edit, saving the file, and importing the modified layer into Krita again. That's where this little plug-in comes in handy.
 
@@ -20,7 +20,7 @@ First run the menu action Tools/Scripts/Configure Edit Layer Externally. Browse 
 
 
 ## Use
-- Select a paint layer
+- Select a Paint layer, Clone layer, Group layer or File layer
 - Go to Tools/Scripts/Edit Layer Externally
 - Export the layer according to what your external editor needs
 - The external editor is opened. Modify what you need
@@ -32,10 +32,20 @@ Krita will load the external layer, and incorporate it in the document as a new 
 
 ## Notes
 
-- The plugin requires the data format to remain unchanged between saving and loading of the layer. For example, when working in a 16-bit environment, ensure that the external editor also saves the layer file in 16-bit format.
-- The dimensions of the layer (width x height) needs to remain unchanged
+- The plugin requires the file type to remain unchanged between saving and loading of the layer. For example, when a layer is exported as PNG, it needs to stay a PNG. You can change the bit depth to whatever is supported by the file format, as long as it is supported by Krita.
+    - Integer formats are exported as PNG.
+    - Float formats are exported as TIFF.
+- The dimensions of the layer (width x height) may change, but the layer size will change accordingly.
+    - The top left point of the layer is the anchor
 
- 
+
 ## Requirements
 
-Tested with Krita 5.2.3 on Windows 10, and images in the RGB format with 8 and 16 bit integers per pixel. Floating point formats and other color models are explicitly untested!
+Tested with Krita 5.2.5 on Windows 10, and images in the RGB format with 8 and 16 bit integers per pixel. Floating point formats should work but have only been tested very lightly (read: once).
+
+## Changelog
+
+### v0.2.0
+- Allow exporting File layers, Group layers and Clone layers
+- Export Paint layers with Filter masks applied
+- Use a Krita File layer to re-import the edited layer, instead of QImage
