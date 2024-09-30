@@ -159,9 +159,8 @@ class EditLayerExternally(Extension):
             if os.path.exists(temp_filename):
                 qDebug("action_triggered: retrieving modified file")
                 file_node = doc.createFileLayer(
-                    f"File Layer - {node.name()}", temp_filename, "ToImageSize", "Lanczos3"
+                    f"File Layer - {node.name()}", temp_filename, "None", ""
                 )
-
                 file_rect = file_node.bounds()
                 qDebug(
                     f"Retrieved image has dimensions (w x h): {file_rect.width()} x {file_rect.height()}"
@@ -172,8 +171,17 @@ class EditLayerExternally(Extension):
 
                 # Update the Krita layer with the new image
                 target = doc.createNode(f"Edited - {node.name()}", "paintlayer")
+                target.setColorSpace(
+                    file_node.colorModel(), file_node.colorDepth(), file_node.colorProfile()
+                )
                 qDebug(f"action_triggered: created target node")
-                target.setPixelData(pixel_data, 0, 0, file_rect.width(), file_rect.height())
+                target.setPixelData(
+                    pixel_data,
+                    source_rect.left(),
+                    source_rect.top(),
+                    file_rect.width(),
+                    file_rect.height(),
+                )
                 parent = node.parentNode()
                 parent.addChildNode(target, node)
                 doc.refreshProjection()
