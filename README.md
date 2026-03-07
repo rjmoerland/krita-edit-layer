@@ -41,9 +41,14 @@ Krita will load the external layer, and incorporate it in the document as a new 
 
 ## Requirements
 
-Tested with Krita 5.2.5 on Windows 10, and images in the RGB format with 8 and 16 bit integers per pixel. Floating point formats should work but have only been tested very lightly (read: once).
+Tested with Krita 5.2.x, 5.3.0-beta and 6.0.0-beta on Windows 10, and with images in the RGB format with 8 and 16 bit integers per pixel. Floating point formats should work but have only been tested very lightly (read: once).
+
 
 ## Changelog
+
+### v0.3.0
+- Made the plug-in compatible with Krita 6.0
+
 
 ### v0.2.0
 - Allow exporting File layers, Group layers and Clone layers

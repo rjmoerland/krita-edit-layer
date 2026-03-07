@@ -4,9 +4,12 @@ import os
 import subprocess
 from tempfile import TemporaryDirectory
 
-from krita import Extension, InfoObject, Krita, QRect, qDebug
-from PyQt5.Qt import QByteArray, QImage
-from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
+from krita import Extension, InfoObject, Krita, qDebug
+
+try:
+    from PyQt6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
+except (ModuleNotFoundError, ImportError):
+    from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
 from .__about__ import __version__
 
@@ -17,7 +20,6 @@ DEFINE_MENU_ENTRY = "Configure Edit Layer Externally"
 
 
 class EditLayerExternally(Extension):
-
     def __init__(self, parent):
         # Always initialise the superclass.
         # This is necessary to create the underlying C++ object
@@ -174,7 +176,7 @@ class EditLayerExternally(Extension):
                 target.setColorSpace(
                     file_node.colorModel(), file_node.colorDepth(), file_node.colorProfile()
                 )
-                qDebug(f"action_triggered: created target node")
+                qDebug("action_triggered: created target node")
                 target.setPixelData(
                     pixel_data,
                     source_rect.left(),
