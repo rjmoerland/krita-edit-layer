@@ -1,3 +1,5 @@
+**This repository has moved to Codeberg: https://codeberg.org/rjmoerland/krita-edit-layer**
+
 # Edit Layer Externally
 
 A Krita plug-in that runs an external application on a single paint/clone/group/file layer.
